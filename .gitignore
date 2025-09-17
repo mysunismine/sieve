@@ -1,0 +1,66 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# --- Virtual environments ---
+.env
+.venv
+venv/
+ENV/
+env/
+env.bak/
+
+# --- Environment & secrets ---
+*.env
+.env.*
+secrets.json
+credentials.json
+*.pem
+*.key
+
+# --- Caches & logs ---
+*.log
+*.sqlite3
+*.db
+*.db-journal
+*.cache/
+.cache/
+.pytest_cache/
+migrations/__pycache__/
+
+# --- Coverage & testing ---
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pyre/
+
+# --- IDE & OS ---
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# --- Docker ---
+*.pid
+*.seed
+*.pid.lock
+docker-compose.override.yml
+
+# Agents
+AGENTS.md

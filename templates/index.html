@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <title>Поиск+Модель — локальный прототип</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #111827;
+            color: #f9fafb;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+        main {
+            width: min(780px, 100%);
+            padding: 32px 16px 48px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        .panel {
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 24px 40px rgba(0, 0, 0, 0.45);
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+            border-radius: 12px;
+            padding: 12px 14px;
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            background: rgba(15, 23, 42, 0.6);
+            color: inherit;
+            font-size: 1rem;
+        }
+        label {
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+        input[type="number"] {
+            width: 100px;
+            border-radius: 12px;
+            padding: 8px 10px;
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            background: rgba(15, 23, 42, 0.6);
+            color: inherit;
+        }
+        select {
+            border-radius: 12px;
+            padding: 8px 10px;
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            background: rgba(15, 23, 42, 0.6);
+            color: inherit;
+        }
+        button {
+            border-radius: 999px;
+            background: linear-gradient(135deg, #22d3ee, #3b82f6);
+            color: #0f172a;
+            border: none;
+            font-weight: 600;
+            padding: 10px 22px;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        form button {
+            align-self: flex-end;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(59, 130, 246, 0.35);
+        }
+        .answer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .answer-header h2 {
+            margin: 0;
+            font-size: 1.4rem;
+        }
+        .sources {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .source-card {
+            border-radius: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            padding: 12px 16px;
+            background: rgba(30, 41, 59, 0.7);
+        }
+        .source-card a {
+            color: #38bdf8;
+            text-decoration: none;
+        }
+        .source-card small {
+            display: block;
+            margin-top: 6px;
+            color: #cbd5f5;
+        }
+        .answer-box {
+            line-height: 1.7;
+            color: #f8fafc;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            white-space: normal;
+        }
+        .answer-box p {
+            margin: 0 0 1em;
+        }
+        .answer-box ul,
+        .answer-box ol {
+            padding-left: 1.4rem;
+            margin: 0 0 1em;
+        }
+        .answer-box li {
+            margin: 0.25em 0;
+        }
+        .answer-box pre {
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 12px;
+            padding: 12px 16px;
+            overflow-x: auto;
+            margin-bottom: 1em;
+        }
+        .answer-box code {
+            font-family: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+        .answer-box a {
+            color: #38bdf8;
+        }
+        .answer-box h1,
+        .answer-box h2,
+        .answer-box h3,
+        .answer-box h4,
+        .answer-box h5,
+        .answer-box h6 {
+            margin: 1.4em 0 0.6em;
+            line-height: 1.35;
+        }
+        .answer-box h1 { font-size: 1.7rem; }
+        .answer-box h2 { font-size: 1.45rem; }
+        .answer-box h3 { font-size: 1.3rem; }
+        .copy-btn {
+            background: rgba(59, 130, 246, 0.2);
+            color: #bfdbfe;
+            border: 1px solid rgba(96, 165, 250, 0.6);
+            padding: 8px 18px;
+        }
+        .copy-btn:hover {
+            box-shadow: none;
+            transform: none;
+            background: rgba(59, 130, 246, 0.35);
+        }
+        .history-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .history-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+        }
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .history-item {
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 0 16px 16px;
+        }
+        .history-item summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            list-style: none;
+            cursor: pointer;
+            padding: 16px 0;
+        }
+        .history-item summary::-webkit-details-marker {
+            display: none;
+        }
+        .history-item summary .meta {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .history-item summary .meta strong {
+            font-size: 1rem;
+            color: #f8fafc;
+        }
+        .history-item summary .meta span {
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+        .history-delete {
+            background: rgba(239, 68, 68, 0.15);
+            color: #fecaca;
+            border: 1px solid rgba(248, 113, 113, 0.5);
+            padding: 6px 14px;
+        }
+        .history-delete:hover {
+            background: rgba(239, 68, 68, 0.3);
+            transform: none;
+            box-shadow: none;
+        }
+        .history-body {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .history-section-title {
+            margin: 12px 0 4px;
+            font-size: 1rem;
+            color: #cbd5f5;
+        }
+        .history-results,
+        .history-citations {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .history-results li,
+        .history-citations li {
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 10px;
+            padding: 8px 12px;
+        }
+        .history-empty {
+            font-size: 0.95rem;
+            color: #94a3b8;
+        }
+        .status {
+            font-size: 0.85rem;
+            color: #facc15;
+            margin-top: 8px;
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+<main>
+    <section class="panel">
+        <form id="ask-form">
+            <label for="query">Текст запроса</label>
+            <textarea id="query" name="query" placeholder="Сформулируйте вопрос..." required></textarea>
+
+            <label for="top_n">Количество источников (1–{{ max_top_n }})</label>
+            <input id="top_n" name="top_n" type="number" min="1" max="{{ max_top_n }}" value="{{ default_top_n }}" />
+
+            <label for="model">Модель OpenAI</label>
+            <select id="model" name="model">
+                {% for model in models %}
+                    <option value="{{ model }}" {% if model == default_model %}selected{% endif %}>{{ model }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit">Спросить</button>
+        </form>
+        <div id="form-status" class="status hidden"></div>
+    </section>
+
+    <section id="response-panel" class="panel hidden">
+        <div class="answer-header">
+            <h2>Ответ</h2>
+            <button type="button" id="copy-answer" class="copy-btn" disabled>Скопировать</button>
+        </div>
+        <div id="answer" class="answer-box"></div>
+        <div id="message" class="status hidden"></div>
+        <div id="sources" class="sources"></div>
+    </section>
+
+    <section id="history-panel" class="panel hidden">
+        <div class="history-header">
+            <h2>История запросов</h2>
+            <button type="button" id="clear-history" class="history-delete">Очистить историю</button>
+        </div>
+        <div id="history-empty" class="history-empty hidden">История пока пуста</div>
+        <div id="history-list" class="history-list"></div>
+    </section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js" crossorigin="anonymous"></script>
+<script>
+    const form = document.getElementById('ask-form');
+    const statusEl = document.getElementById('form-status');
+    const responsePanel = document.getElementById('response-panel');
+    const answerEl = document.getElementById('answer');
+    const sourcesEl = document.getElementById('sources');
+    const messageEl = document.getElementById('message');
+    const copyBtn = document.getElementById('copy-answer');
+    const historyPanel = document.getElementById('history-panel');
+    const historyListEl = document.getElementById('history-list');
+    const historyEmptyEl = document.getElementById('history-empty');
+    const clearHistoryBtn = document.getElementById('clear-history');
+    let lastAnswerMarkdown = '';
+    let copyResetTimer;
+
+    function renderMarkdownToElement(element, markdown) {
+        const text = markdown || '';
+        if (window.marked && window.DOMPurify) {
+            const html = window.marked.parse(text, { breaks: true });
+            element.innerHTML = window.DOMPurify.sanitize(html);
+        } else {
+            element.textContent = text;
+        }
+    }
+
+    function showStatus(text) {
+        statusEl.textContent = text;
+        statusEl.classList.remove('hidden');
+    }
+
+    function clearStatus() {
+        statusEl.classList.add('hidden');
+        statusEl.textContent = '';
+    }
+
+    function renderAnswer(data) {
+        const markdown = data.answer_markdown || '';
+        lastAnswerMarkdown = markdown;
+        renderMarkdownToElement(answerEl, markdown);
+        copyBtn.disabled = !markdown;
+        copyBtn.textContent = 'Скопировать';
+        sourcesEl.innerHTML = '';
+
+        if (data.citations && data.citations.length > 0) {
+            data.citations.forEach((item) => {
+                const card = document.createElement('div');
+                card.className = 'source-card';
+                const title = document.createElement('div');
+                title.innerHTML = `[${item.index}] <a href="${item.url}" target="_blank" rel="noopener noreferrer">${item.title || item.url}</a>`;
+                const snippet = document.createElement('small');
+                snippet.textContent = item.snippet || 'Сниппет отсутствует';
+                card.appendChild(title);
+                card.appendChild(snippet);
+                sourcesEl.appendChild(card);
+            });
+        }
+
+        if (data.message) {
+            messageEl.textContent = data.message;
+            messageEl.classList.remove('hidden');
+        } else {
+            messageEl.classList.add('hidden');
+            messageEl.textContent = '';
+        }
+
+        responsePanel.classList.remove('hidden');
+    }
+
+    function formatDate(value) {
+        if (!value) {
+            return '';
+        }
+
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) {
+            return value;
+        }
+
+        return date.toLocaleString('ru-RU', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+    }
+
+    function createHistoryItem(entry) {
+        const details = document.createElement('details');
+        details.className = 'history-item';
+        details.open = false;
+        details.dataset.id = entry.id;
+
+        const summary = document.createElement('summary');
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+
+        const title = document.createElement('strong');
+        title.textContent = entry.query;
+        meta.appendChild(title);
+
+        const subtitle = document.createElement('span');
+        subtitle.textContent = `${formatDate(entry.created_at)} • ${entry.model}`;
+        meta.appendChild(subtitle);
+
+        summary.appendChild(meta);
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'history-delete';
+        deleteBtn.textContent = 'Удалить';
+        deleteBtn.dataset.id = entry.id;
+        summary.appendChild(deleteBtn);
+
+        details.appendChild(summary);
+
+        const body = document.createElement('div');
+        body.className = 'history-body';
+
+        const answerTitle = document.createElement('div');
+        answerTitle.className = 'history-section-title';
+        answerTitle.textContent = 'Ответ';
+        body.appendChild(answerTitle);
+
+        const answerBox = document.createElement('div');
+        answerBox.className = 'answer-box';
+        renderMarkdownToElement(answerBox, entry.answer_markdown);
+        body.appendChild(answerBox);
+
+        if (entry.message) {
+            const messageInfo = document.createElement('div');
+            messageInfo.className = 'status';
+            messageInfo.textContent = entry.message;
+            body.appendChild(messageInfo);
+        }
+
+        const citationsTitle = document.createElement('div');
+        citationsTitle.className = 'history-section-title';
+        citationsTitle.textContent = 'Источники';
+        body.appendChild(citationsTitle);
+
+        if (entry.citations && entry.citations.length > 0) {
+            const list = document.createElement('ul');
+            list.className = 'history-citations';
+            entry.citations.forEach((citation) => {
+                const item = document.createElement('li');
+                const link = document.createElement('a');
+                link.href = citation.url;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.textContent = `[${citation.index}] ${citation.title || citation.url}`;
+                item.appendChild(link);
+
+                if (citation.snippet) {
+                    const snippet = document.createElement('div');
+                    snippet.textContent = citation.snippet;
+                    snippet.style.marginTop = '4px';
+                    snippet.style.color = '#cbd5f5';
+                    snippet.style.fontSize = '0.9rem';
+                    item.appendChild(snippet);
+                }
+
+                list.appendChild(item);
+            });
+            body.appendChild(list);
+        } else {
+            const empty = document.createElement('div');
+            empty.className = 'history-empty';
+            empty.textContent = 'Источники отсутствуют';
+            body.appendChild(empty);
+        }
+
+        const resultsTitle = document.createElement('div');
+        resultsTitle.className = 'history-section-title';
+        resultsTitle.textContent = 'Результаты поиска';
+        body.appendChild(resultsTitle);
+
+        if (entry.results && entry.results.length > 0) {
+            const list = document.createElement('ul');
+            list.className = 'history-results';
+            entry.results.forEach((result) => {
+                const item = document.createElement('li');
+                const link = document.createElement('a');
+                link.href = result.url;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.textContent = `[${result.index}] ${result.title || result.url}`;
+                item.appendChild(link);
+
+                if (result.snippet) {
+                    const snippet = document.createElement('div');
+                    snippet.textContent = result.snippet;
+                    snippet.style.marginTop = '4px';
+                    snippet.style.color = '#cbd5f5';
+                    snippet.style.fontSize = '0.9rem';
+                    item.appendChild(snippet);
+                }
+
+                list.appendChild(item);
+            });
+            body.appendChild(list);
+        } else {
+            const empty = document.createElement('div');
+            empty.className = 'history-empty';
+            empty.textContent = 'Поисковые результаты не найдены';
+            body.appendChild(empty);
+        }
+
+        details.appendChild(body);
+        return details;
+    }
+
+    function renderHistory(items) {
+        historyPanel.classList.remove('hidden');
+        historyListEl.innerHTML = '';
+
+        if (!items || items.length === 0) {
+            historyEmptyEl.classList.remove('hidden');
+            clearHistoryBtn.disabled = true;
+            return;
+        }
+
+        historyEmptyEl.classList.add('hidden');
+        clearHistoryBtn.disabled = false;
+        items.forEach((entry) => {
+            const element = createHistoryItem(entry);
+            historyListEl.appendChild(element);
+        });
+    }
+
+    async function loadHistory() {
+        try {
+            const response = await fetch('/api/history');
+            if (!response.ok) {
+                throw new Error('history-failed');
+            }
+            const data = await response.json();
+            renderHistory(data.items || []);
+        } catch (error) {
+            console.error('History load failed', error);
+        }
+    }
+
+    async function clearHistory() {
+        try {
+            const response = await fetch('/api/history', { method: 'DELETE' });
+            if (!response.ok) {
+                throw new Error('history-clear-failed');
+            }
+            const data = await response.json();
+            renderHistory(data.items || []);
+            showStatus('История очищена');
+            setTimeout(() => clearStatus(), 2000);
+        } catch (error) {
+            showStatus('Не удалось очистить историю');
+        }
+    }
+
+    async function deleteHistoryItem(id) {
+        try {
+            const response = await fetch(`/api/history/${id}`, { method: 'DELETE' });
+            if (!response.ok) {
+                if (response.status === 404) {
+                    throw new Error('not-found');
+                }
+                throw new Error('history-delete-failed');
+            }
+            const data = await response.json();
+            renderHistory(data.items || []);
+        } catch (error) {
+            const message = error && error.message === 'not-found'
+                ? 'Запись не найдена'
+                : 'Не удалось удалить запись истории';
+            showStatus(message);
+        }
+    }
+
+    copyBtn.addEventListener('click', async () => {
+        if (!lastAnswerMarkdown) {
+            return;
+        }
+
+        try {
+            if (!navigator.clipboard || !navigator.clipboard.writeText) {
+                throw new Error('clipboard-unavailable');
+            }
+            await navigator.clipboard.writeText(lastAnswerMarkdown);
+            copyBtn.textContent = 'Скопировано!';
+            showStatus('Ответ скопирован в буфер обмена');
+            if (copyResetTimer) {
+                clearTimeout(copyResetTimer);
+            }
+            copyResetTimer = setTimeout(() => {
+                copyBtn.textContent = 'Скопировать';
+                clearStatus();
+            }, 2000);
+        } catch (error) {
+            const message = error && error.message === 'clipboard-unavailable'
+                ? 'Буфер обмена недоступен в этом браузере'
+                : 'Не удалось скопировать ответ';
+            showStatus(message);
+        }
+    });
+
+    clearHistoryBtn.addEventListener('click', async () => {
+        await clearHistory();
+    });
+
+    historyListEl.addEventListener('click', async (event) => {
+        const target = event.target;
+        if (target instanceof HTMLElement && target.classList.contains('history-delete')) {
+            event.preventDefault();
+            event.stopPropagation();
+            const { id } = target.dataset;
+            if (id) {
+                await deleteHistoryItem(id);
+            }
+        }
+    });
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        clearStatus();
+        showStatus('Запрос выполняется...');
+
+        const formData = new FormData(form);
+        const payload = {
+            query: formData.get('query'),
+            top_n: Number(formData.get('top_n')) || undefined,
+            model: formData.get('model') || undefined,
+        };
+
+        try {
+            const response = await fetch('/api/ask', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) {
+                const errorBody = await response.json().catch(() => ({}));
+                throw new Error(errorBody.detail || 'Сервис временно недоступен');
+            }
+
+            const data = await response.json();
+            renderAnswer(data);
+            await loadHistory();
+            clearStatus();
+        } catch (error) {
+            showStatus(error.message || 'Произошла ошибка');
+        }
+    });
+
+    loadHistory();
+</script>
+</body>
+</html>
