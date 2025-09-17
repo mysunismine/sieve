@@ -15,7 +15,7 @@ class DummyResponse:
         return self._json_data
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio("asyncio")
 async def test_search_google_success(monkeypatch):
     recorded = {}
     response_payload = {
@@ -69,7 +69,7 @@ async def test_search_google_success(monkeypatch):
     assert results[1].url == "https://example.com/two"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio("asyncio")
 async def test_search_google_http_error(monkeypatch):
     class DummyClient:
         async def __aenter__(self):
@@ -89,7 +89,7 @@ async def test_search_google_http_error(monkeypatch):
         await search_google("query", 1, settings)
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio("asyncio")
 async def test_search_google_non_ok_status(monkeypatch):
     dummy_response = DummyResponse(status_code=500, text="boom")
 
