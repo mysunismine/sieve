@@ -16,7 +16,7 @@ class DummyResponse:
         return self._payload
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio("asyncio")
 async def test_generate_answer_success(monkeypatch):
     recorded = {}
     dummy_response = DummyResponse(
@@ -75,7 +75,7 @@ async def test_generate_answer_success(monkeypatch):
     assert recorded["url"] == "https://api.example.com/v1/responses"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio("asyncio")
 async def test_generate_answer_non_ok_status(monkeypatch):
     dummy_response = DummyResponse(status_code=500, text="boom")
 
@@ -97,7 +97,7 @@ async def test_generate_answer_non_ok_status(monkeypatch):
         await generate_answer("Question", [], settings, model="gpt")
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio("asyncio")
 async def test_generate_answer_empty_output(monkeypatch):
     dummy_response = DummyResponse(status_code=httpx.codes.OK, payload={"output": []})
 

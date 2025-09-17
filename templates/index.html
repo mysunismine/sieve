@@ -2,30 +2,103 @@
 <html lang="ru">
 <head>
     <meta charset="utf-8" />
-    <title>Поиск+Модель — локальный прототип</title>
+    <title>Sieve — умный поиск</title>
     <style>
+        :root {
+            --sidebar-width: 320px;
+            --sidebar-min: 220px;
+            --sidebar-max: 420px;
+        }
+        * {
+            box-sizing: border-box;
+        }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background: #111827;
+            background: #0b1220;
             color: #f9fafb;
             margin: 0;
             min-height: 100vh;
             display: flex;
             justify-content: center;
-        }
-        main {
-            width: min(780px, 100%);
             padding: 32px 16px 48px;
+        }
+        .app-shell {
+            width: min(1200px, 100%);
+            display: flex;
+            gap: 0;
+            background: rgba(15, 23, 42, 0.45);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+            border-radius: 22px;
+            overflow: hidden;
+            backdrop-filter: blur(16px);
+        }
+        .sidebar {
+            width: var(--sidebar-width);
+            min-width: var(--sidebar-min);
+            max-width: var(--sidebar-max);
+            background: rgba(15, 23, 42, 0.85);
             display: flex;
             flex-direction: column;
-            gap: 24px;
+        }
+        .splitter {
+            width: 10px;
+            cursor: col-resize;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(180deg, rgba(148, 163, 184, 0.1), rgba(148, 163, 184, 0));
+        }
+        .splitter::before {
+            content: "";
+            width: 2px;
+            height: 48px;
+            border-radius: 999px;
+            background: rgba(148, 163, 184, 0.5);
+        }
+        .main-column {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background: rgba(15, 23, 42, 0.75);
+            padding: 28px;
         }
         .panel {
-            background: rgba(15, 23, 42, 0.85);
+            background: rgba(17, 24, 39, 0.75);
             border: 1px solid rgba(148, 163, 184, 0.2);
-            border-radius: 16px;
+            border-radius: 18px;
             padding: 24px;
             box-shadow: 0 24px 40px rgba(0, 0, 0, 0.45);
+        }
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+        .top-bar h1 {
+            margin: 0;
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+        .billing-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 999px;
+            background: rgba(59, 130, 246, 0.15);
+            color: #93c5fd;
+            border: 1px solid rgba(96, 165, 250, 0.5);
+            font-weight: 600;
+            padding: 10px 18px;
+            text-decoration: none;
+            transition: background 0.15s ease, transform 0.15s ease;
+        }
+        .billing-link:hover {
+            background: rgba(59, 130, 246, 0.25);
+            transform: translateY(-1px);
         }
         form {
             display: flex;
@@ -46,20 +119,15 @@
             font-size: 0.9rem;
             color: #94a3b8;
         }
-        input[type="number"] {
-            width: 100px;
+        input[type="number"], select {
             border-radius: 12px;
             padding: 8px 10px;
             border: 1px solid rgba(148, 163, 184, 0.4);
             background: rgba(15, 23, 42, 0.6);
             color: inherit;
         }
-        select {
-            border-radius: 12px;
-            padding: 8px 10px;
-            border: 1px solid rgba(148, 163, 184, 0.4);
-            background: rgba(15, 23, 42, 0.6);
-            color: inherit;
+        input[type="number"] {
+            width: 110px;
         }
         button {
             border-radius: 999px;
@@ -78,37 +146,68 @@
             transform: translateY(-2px);
             box-shadow: 0 12px 24px rgba(59, 130, 246, 0.35);
         }
+        .conversation-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
         .answer-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            margin-bottom: 16px;
         }
         .answer-header h2 {
             margin: 0;
-            font-size: 1.4rem;
+            font-size: 1.3rem;
         }
-        .sources {
-            margin-top: 20px;
+        .response-loading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            color: #cbd5f5;
+        }
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid rgba(148, 163, 184, 0.25);
+            border-top-color: rgba(148, 163, 184, 0.85);
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .conversation-list {
             display: flex;
             flex-direction: column;
             gap: 12px;
         }
-        .source-card {
-            border-radius: 12px;
-            border: 1px solid rgba(148, 163, 184, 0.25);
-            padding: 12px 16px;
-            background: rgba(30, 41, 59, 0.7);
+        .chat-message {
+            max-width: 80%;
+            padding: 14px 18px;
+            border-radius: 16px;
+            line-height: 1.6;
+            color: #f9fafb;
+            box-shadow: 0 16px 30px rgba(15, 23, 42, 0.45);
         }
-        .source-card a {
-            color: #38bdf8;
-            text-decoration: none;
+        .chat-message.user {
+            align-self: flex-end;
+            background: rgba(59, 130, 246, 0.35);
+            border-bottom-right-radius: 6px;
         }
-        .source-card small {
-            display: block;
-            margin-top: 6px;
-            color: #cbd5f5;
+        .chat-message.assistant {
+            align-self: flex-start;
+            background: rgba(15, 23, 42, 0.85);
+            border-bottom-left-radius: 6px;
+        }
+        .chat-message.assistant.error {
+            background: rgba(127, 29, 29, 0.7);
+            border: 1px solid rgba(248, 113, 113, 0.45);
+        }
+        .conversation-list .status {
+            margin-top: 0;
         }
         .answer-box {
             line-height: 1.7;
@@ -164,21 +263,50 @@
             transform: none;
             background: rgba(59, 130, 246, 0.35);
         }
+        .sources {
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .source-card {
+            border-radius: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            padding: 12px 16px;
+            background: rgba(30, 41, 59, 0.7);
+        }
+        .source-card a {
+            color: #38bdf8;
+            text-decoration: none;
+        }
+        .source-card small {
+            display: block;
+            margin-top: 6px;
+            color: #cbd5f5;
+        }
+        .history-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 24px;
+        }
         .history-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            margin-bottom: 16px;
         }
         .history-header h2 {
             margin: 0;
-            font-size: 1.25rem;
+            font-size: 1.1rem;
         }
         .history-list {
             display: flex;
             flex-direction: column;
             gap: 12px;
+            overflow-y: auto;
+            padding-right: 6px;
         }
         .history-item {
             border: 1px solid rgba(148, 163, 184, 0.2);
@@ -207,20 +335,30 @@
             font-size: 1rem;
             color: #f8fafc;
         }
-        .history-item summary .meta span {
-            font-size: 0.85rem;
-            color: #94a3b8;
-        }
         .history-delete {
             background: rgba(239, 68, 68, 0.15);
             color: #fecaca;
             border: 1px solid rgba(248, 113, 113, 0.5);
+            border-radius: 12px;
             padding: 6px 14px;
         }
         .history-delete:hover {
             background: rgba(239, 68, 68, 0.3);
             transform: none;
             box-shadow: none;
+        }
+        .history-delete-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border-radius: 10px;
+        }
+        .history-delete-icon svg {
+            width: 18px;
+            height: 18px;
         }
         .history-body {
             display: flex;
@@ -254,65 +392,121 @@
             margin-top: 8px;
         }
         .hidden { display: none; }
+        @media (max-width: 1080px) {
+            body {
+                padding: 24px 12px;
+            }
+            .app-shell {
+                flex-direction: column;
+                border-radius: 18px;
+            }
+            .sidebar {
+                width: 100% !important;
+                max-width: none;
+                min-width: 0;
+            }
+            .splitter {
+                display: none;
+            }
+            .main-column {
+                padding: 24px 20px;
+            }
+            .chat-message {
+                max-width: 100%;
+            }
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 16px 10px;
+            }
+            .main-column {
+                padding: 20px 16px;
+            }
+            .top-bar h1 {
+                font-size: 1.3rem;
+            }
+            .answer-header h2 {
+                font-size: 1.15rem;
+            }
+            textarea {
+                min-height: 100px;
+            }
+        }
     </style>
 </head>
 <body>
-<main>
-    <section class="panel">
-        <form id="ask-form">
-            <label for="query">Текст запроса</label>
-            <textarea id="query" name="query" placeholder="Сформулируйте вопрос..." required></textarea>
-
-            <label for="top_n">Количество источников (1–{{ max_top_n }})</label>
-            <input id="top_n" name="top_n" type="number" min="1" max="{{ max_top_n }}" value="{{ default_top_n }}" />
-
-            <label for="model">Модель OpenAI</label>
-            <select id="model" name="model">
-                {% for model in models %}
-                    <option value="{{ model }}" {% if model == default_model %}selected{% endif %}>{{ model }}</option>
-                {% endfor %}
-            </select>
-
-            <button type="submit">Спросить</button>
-        </form>
-        <div id="form-status" class="status hidden"></div>
-    </section>
-
-    <section id="response-panel" class="panel hidden">
-        <div class="answer-header">
-            <h2>Ответ</h2>
-            <button type="button" id="copy-answer" class="copy-btn" disabled>Скопировать</button>
+<div class="app-shell">
+    <aside id="history-panel" class="sidebar hidden">
+        <div class="history-wrapper">
+            <div class="history-header">
+                <h2>История запросов</h2>
+                <button type="button" id="clear-history" class="history-delete">Очистить историю</button>
+            </div>
+            <div id="history-empty" class="history-empty hidden">История пока пуста</div>
+            <div id="history-list" class="history-list"></div>
         </div>
-        <div id="answer" class="answer-box"></div>
-        <div id="message" class="status hidden"></div>
-        <div id="sources" class="sources"></div>
-    </section>
-
-    <section id="history-panel" class="panel hidden">
-        <div class="history-header">
-            <h2>История запросов</h2>
-            <button type="button" id="clear-history" class="history-delete">Очистить историю</button>
+    </aside>
+    <div id="splitter" class="splitter hidden" role="separator" aria-orientation="vertical" aria-label="Перетащите, чтобы изменить ширину истории" tabindex="0"></div>
+    <main class="main-column">
+        <div class="top-bar">
+            <h1>Sieve</h1>
+            <a class="billing-link" href="https://platform.openai.com/settings/organization/billing/overview" target="_blank" rel="noopener noreferrer">Баланс OpenAI</a>
         </div>
-        <div id="history-empty" class="history-empty hidden">История пока пуста</div>
-        <div id="history-list" class="history-list"></div>
-    </section>
-</main>
+        <section class="panel">
+            <form id="ask-form">
+                <label for="query">Текст запроса</label>
+                <textarea id="query" name="query" placeholder="Сформулируйте вопрос..." required></textarea>
+
+                <label for="top_n">Количество источников (1–{{ max_top_n }})</label>
+                <input id="top_n" name="top_n" type="number" min="1" max="{{ max_top_n }}" value="{{ default_top_n }}" />
+
+                <label for="model">Модель OpenAI</label>
+                <select id="model" name="model">
+                    {% for model in models %}
+                        <option value="{{ model }}" {% if model == default_model %}selected{% endif %}>{{ model }}</option>
+                    {% endfor %}
+                </select>
+
+                <button type="submit">Спросить</button>
+            </form>
+            <div id="form-status" class="status hidden"></div>
+        </section>
+
+        <section id="response-panel" class="panel conversation-panel hidden">
+            <div class="answer-header">
+                <h2>Ответ</h2>
+                <button type="button" id="copy-answer" class="copy-btn" disabled>Скопировать</button>
+            </div>
+            <div id="response-loading" class="response-loading hidden">
+                <span class="spinner" aria-hidden="true"></span>
+                <span>Готовим ответ...</span>
+            </div>
+            <div id="conversation-list" class="conversation-list"></div>
+            <div id="message" class="status hidden"></div>
+            <div id="sources" class="sources"></div>
+        </section>
+    </main>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js" crossorigin="anonymous"></script>
 <script>
     const form = document.getElementById('ask-form');
     const statusEl = document.getElementById('form-status');
     const responsePanel = document.getElementById('response-panel');
-    const answerEl = document.getElementById('answer');
+    const conversationListEl = document.getElementById('conversation-list');
     const sourcesEl = document.getElementById('sources');
     const messageEl = document.getElementById('message');
     const copyBtn = document.getElementById('copy-answer');
+    const loadingEl = document.getElementById('response-loading');
     const historyPanel = document.getElementById('history-panel');
     const historyListEl = document.getElementById('history-list');
     const historyEmptyEl = document.getElementById('history-empty');
     const clearHistoryBtn = document.getElementById('clear-history');
+    const splitter = document.getElementById('splitter');
+    const appShell = document.querySelector('.app-shell');
     let lastAnswerMarkdown = '';
     let copyResetTimer;
+    let isDragging = false;
 
     function renderMarkdownToElement(element, markdown) {
         const text = markdown || '';
@@ -334,10 +528,59 @@
         statusEl.textContent = '';
     }
 
+    function ensureConversationVisible() {
+        if (responsePanel.classList.contains('hidden')) {
+            responsePanel.classList.remove('hidden');
+        }
+    }
+
+    function appendConversationMessage(role, content, options = {}) {
+        if (!conversationListEl) {
+            return;
+        }
+
+        const bubble = document.createElement('div');
+        bubble.className = `chat-message ${role}`;
+        if (options.variant === 'error') {
+            bubble.classList.add('error');
+        }
+
+        if (options.markdown) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'answer-box';
+            renderMarkdownToElement(wrapper, content);
+            bubble.appendChild(wrapper);
+        } else {
+            const safeText = (content || '').toString();
+            const lines = safeText.split('\n');
+            lines.forEach((line, index) => {
+                if (index > 0) {
+                    bubble.appendChild(document.createElement('br'));
+                }
+                bubble.appendChild(document.createTextNode(line));
+            });
+        }
+
+        conversationListEl.appendChild(bubble);
+        bubble.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        ensureConversationVisible();
+    }
+
     function renderAnswer(data) {
+        if (conversationListEl) {
+            conversationListEl.innerHTML = '';
+        }
         const markdown = data.answer_markdown || '';
         lastAnswerMarkdown = markdown;
-        renderMarkdownToElement(answerEl, markdown);
+
+        if (loadingEl) {
+            loadingEl.classList.add('hidden');
+        }
+
+        if (markdown) {
+            appendConversationMessage('assistant', markdown, { markdown: true });
+        }
+
         copyBtn.disabled = !markdown;
         copyBtn.textContent = 'Скопировать';
         sourcesEl.innerHTML = '';
@@ -364,26 +607,7 @@
             messageEl.textContent = '';
         }
 
-        responsePanel.classList.remove('hidden');
-    }
-
-    function formatDate(value) {
-        if (!value) {
-            return '';
-        }
-
-        const date = new Date(value);
-        if (Number.isNaN(date.getTime())) {
-            return value;
-        }
-
-        return date.toLocaleString('ru-RU', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-        });
+        ensureConversationVisible();
     }
 
     function createHistoryItem(entry) {
@@ -400,17 +624,14 @@
         title.textContent = entry.query;
         meta.appendChild(title);
 
-        const subtitle = document.createElement('span');
-        subtitle.textContent = `${formatDate(entry.created_at)} • ${entry.model}`;
-        meta.appendChild(subtitle);
-
         summary.appendChild(meta);
 
         const deleteBtn = document.createElement('button');
         deleteBtn.type = 'button';
-        deleteBtn.className = 'history-delete';
-        deleteBtn.textContent = 'Удалить';
+        deleteBtn.className = 'history-delete history-delete-icon';
         deleteBtn.dataset.id = entry.id;
+        deleteBtn.setAttribute('aria-label', 'Удалить запрос');
+        deleteBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 10v7m6-7v7m-9-9h12l-1 11H7l-1-11zm4-4h4l1 2H8l1-2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
         summary.appendChild(deleteBtn);
 
         details.appendChild(summary);
@@ -513,6 +734,7 @@
 
     function renderHistory(items) {
         historyPanel.classList.remove('hidden');
+        toggleSplitterVisibility(false);
         historyListEl.innerHTML = '';
 
         if (!items || items.length === 0) {
@@ -631,6 +853,24 @@
             model: formData.get('model') || undefined,
         };
 
+        lastAnswerMarkdown = '';
+        copyBtn.disabled = true;
+        copyBtn.textContent = 'Скопировать';
+        if (conversationListEl) {
+            conversationListEl.innerHTML = '';
+        }
+        if (sourcesEl) {
+            sourcesEl.innerHTML = '';
+        }
+        if (messageEl) {
+            messageEl.classList.add('hidden');
+            messageEl.textContent = '';
+        }
+        responsePanel.classList.remove('hidden');
+        if (loadingEl) {
+            loadingEl.classList.remove('hidden');
+        }
+
         try {
             const response = await fetch('/api/ask', {
                 method: 'POST',
@@ -642,17 +882,70 @@
                 const errorBody = await response.json().catch(() => ({}));
                 throw new Error(errorBody.detail || 'Сервис временно недоступен');
             }
-
             const data = await response.json();
             renderAnswer(data);
             await loadHistory();
             clearStatus();
         } catch (error) {
+            if (loadingEl) {
+                loadingEl.classList.add('hidden');
+            }
             showStatus(error.message || 'Произошла ошибка');
+            const message = error && error.message ? error.message : 'Произошла ошибка';
+            appendConversationMessage('assistant', message, { variant: 'error' });
         }
     });
 
     loadHistory();
+
+    function toggleSplitterVisibility(forceHidden = false) {
+        if (!splitter) {
+            return;
+        }
+        if (forceHidden || historyPanel.classList.contains('hidden') || window.matchMedia('(max-width: 1080px)').matches) {
+            splitter.classList.add('hidden');
+        } else {
+            splitter.classList.remove('hidden');
+        }
+    }
+
+    if (splitter && appShell) {
+        const styles = getComputedStyle(document.documentElement);
+        const parseSize = (value, fallback) => {
+            const parsed = parseInt(value, 10);
+            return Number.isNaN(parsed) ? fallback : parsed;
+        };
+        const minWidth = parseSize(styles.getPropertyValue('--sidebar-min'), 220);
+        const maxWidth = parseSize(styles.getPropertyValue('--sidebar-max'), 420);
+
+        splitter.addEventListener('pointerdown', (event) => {
+            if (window.matchMedia('(max-width: 1080px)').matches) {
+                return;
+            }
+            isDragging = true;
+            splitter.setPointerCapture(event.pointerId);
+            event.preventDefault();
+        });
+
+        splitter.addEventListener('pointermove', (event) => {
+            if (!isDragging) {
+                return;
+            }
+            const rect = appShell.getBoundingClientRect();
+            let newWidth = event.clientX - rect.left;
+            newWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+            document.documentElement.style.setProperty('--sidebar-width', `${newWidth}px`);
+        });
+
+        const stopDragging = () => {
+            isDragging = false;
+        };
+
+        splitter.addEventListener('pointerup', stopDragging);
+        splitter.addEventListener('lostpointercapture', stopDragging);
+    }
+
+    window.addEventListener('resize', () => toggleSplitterVisibility());
 </script>
 </body>
 </html>
