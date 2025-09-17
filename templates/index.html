@@ -831,10 +831,14 @@
 
     historyListEl.addEventListener('click', async (event) => {
         const target = event.target;
-        if (target instanceof HTMLElement && target.classList.contains('history-delete')) {
+        const deleteButton = target instanceof Element
+            ? target.closest('.history-delete')
+            : null;
+
+        if (deleteButton) {
             event.preventDefault();
             event.stopPropagation();
-            const { id } = target.dataset;
+            const { id } = deleteButton.dataset;
             if (id) {
                 await deleteHistoryItem(id);
             }
