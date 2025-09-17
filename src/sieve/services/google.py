@@ -1,12 +1,12 @@
-import logging
 from dataclasses import dataclass
-from typing import List
+
 import httpx
 
-from src.vibechecker.config import Settings
+from src.sieve.config import Settings
+from src.sieve.core.constants import GOOGLE_SEARCH_ENDPOINT
+from src.sieve.core.logging import get_logger
 
-GOOGLE_SEARCH_ENDPOINT = "https://www.googleapis.com/customsearch/v1"
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class GoogleSearchError(Exception):
@@ -21,7 +21,7 @@ class SearchResult:
     index: int
 
 
-async def search_google(query: str, top_n: int, settings: Settings) -> List[SearchResult]:
+async def search_google(query: str, top_n: int, settings: Settings) -> list[SearchResult]:
     """Query Google Custom Search and return ordered search results."""
     params = {
         "key": settings.google_api_key,
@@ -50,7 +50,7 @@ async def search_google(query: str, top_n: int, settings: Settings) -> List[Sear
 
     payload = response.json()
     items = payload.get("items", [])
-    results: List[SearchResult] = []
+    results: list[SearchResult] = []
     for index, item in enumerate(items, start=1):
         results.append(
             SearchResult(

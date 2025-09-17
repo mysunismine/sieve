@@ -1,30 +1,32 @@
+"""In-memory repository for Ask history entries."""
+
 from __future__ import annotations
 
 import threading
-from typing import Iterable, List, Optional
+from collections.abc import Iterable
 from uuid import UUID
 
-from src.vibechecker.models.ask import Citation
-from src.vibechecker.models.history import HistoryEntry, HistoryResult, HistoryListResponse
-from src.vibechecker.services.google import SearchResult
+from src.sieve.models.ask import Citation
+from src.sieve.models.history import HistoryEntry, HistoryListResponse, HistoryResult
+from src.sieve.services.google import SearchResult
 
 
-class HistoryStore:
-    """Thread-safe in-memory хранилище истории запросов."""
+class HistoryRepository:
+    """Thread-safe in-memory storage for ask history."""
 
-    def __init__(self, max_size: int = 50) -> None:
+    def __init__(self, max_size: int) -> None:
         self._max_size = max_size
-        self._items: List[HistoryEntry] = []
+        self._items: list[HistoryEntry] = []
         self._lock = threading.Lock()
 
-    def add_entry(
+    def insert(
         self,
         *,
         query: str,
         top_n: int,
         model: str,
         answer_markdown: str,
-        message: Optional[str],
+        message: str | None,
         citations: Iterable[Citation],
         results: Iterable[SearchResult],
         search_used: bool,
@@ -57,7 +59,7 @@ class HistoryStore:
 
         return entry
 
-    def list_entries(self) -> HistoryListResponse:
+    def list(self) -> HistoryListResponse:
         with self._lock:
             items = list(self._items)
         return HistoryListResponse(items=items)
@@ -73,6 +75,3 @@ class HistoryStore:
                     del self._items[index]
                     return True
         return False
-
-
-history_store = HistoryStore()
